@@ -178,8 +178,6 @@ services:
       - DOCKER_HOST=tcp://docker-proxy:2375
       # My config
       - CORS_ORIGINS=${CORS_ORIGINS:-}
-      - DASHBOARD_ENABLED=${DASHBOARD_ENABLED:-true}
-      - PROXY_ENABLED=${PROXY_ENABLED:-false}
       - POSTGRES_BUILTIN=${POSTGRES_BUILTIN:-true}
       - MINIO_BUILTIN=${MINIO_BUILTIN:-false}
       - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
