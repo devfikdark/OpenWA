@@ -167,6 +167,7 @@ services:
       - RATE_LIMIT_LONG_TTL=${RATE_LIMIT_LONG_TTL:-}
       - RATE_LIMIT_LONG_LIMIT=${RATE_LIMIT_LONG_LIMIT:-}
       # Plugins
+      - PLUGINS_ENABLED=${PLUGINS_ENABLED:-false}
       - PLUGINS_DIR=${PLUGINS_DIR:-/app/data/plugins}
       # Security
       - API_MASTER_KEY=${API_MASTER_KEY:-}
@@ -175,6 +176,13 @@ services:
       - CSP_UPGRADE_INSECURE_REQUESTS=${CSP_UPGRADE_INSECURE_REQUESTS:-}
       # Docker socket proxy (openwa-api never touches /var/run/docker.sock directly)
       - DOCKER_HOST=tcp://docker-proxy:2375
+      # My config
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+      - DASHBOARD_ENABLED=${DASHBOARD_ENABLED:-true}
+      - PROXY_ENABLED=${PROXY_ENABLED:-false}
+      - POSTGRES_BUILTIN=${POSTGRES_BUILTIN:-true}
+      - MINIO_BUILTIN=${MINIO_BUILTIN:-false}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
     volumes:
       - openwa-data:/app/data
       - ./docker-compose.yml:/app/docker-compose.yml:ro
