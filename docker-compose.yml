@@ -153,19 +153,12 @@ services:
       - DOCKER_HOST=tcp://docker-proxy:2375
       # My config
       - CORS_ORIGINS=${CORS_ORIGINS:-}
-      - POSTGRES_BUILTIN=${POSTGRES_BUILTIN:-true}
+      - POSTGRES_BUILTIN=${POSTGRES_BUILTIN:-false}
       - MINIO_BUILTIN=${MINIO_BUILTIN:-false}
       - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
     volumes:
       - openwa-data:/app/data
       - ./docker-compose.yml:/app/docker-compose.yml:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-        required: false
-      redis:
-        condition: service_healthy
-        required: false
     healthcheck:
       test:
         [
@@ -186,79 +179,12 @@ services:
   # same port (2785) — there is no separate dashboard container. Reach it at the openwa-api
   # port directly; put your own TLS reverse proxy (nginx/Caddy/cloud LB) in front if needed.
 
-  # ===== OPTIONAL: Built-in PostgreSQL =====
-  postgres:
-    image: postgres:16-alpine
-    container_name: openwa-postgres
-    profiles: ['postgres', 'full']
-    restart: unless-stopped
-    networks:
-      - openwa-network
-    security_opt:
-      - 'no-new-privileges:true'
-    environment:
-      POSTGRES_USER: ${DATABASE_USERNAME:-}
-      # M16: no committed default secret. Empty unless the operator sets it; the postgres
-      # image refuses to initialize with an empty password (clear fail-fast), and the app's
-      # production boot guard rejects empty/placeholder secrets before startup.
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-}
-      POSTGRES_DB: ${DATABASE_NAME:-openwa}
-      # PostgreSQL schema for OpenWA's tables + migration ledger. Default 'public'. The init
-      # script below creates the schema (if non-public) and sets the database default search_path,
-      # so the built-in container works zero-config with a custom schema. Ignored when 'public'.
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      # Runs only on first init (postgres image docker-entrypoint-initdb.d semantics): creates the
-      # configured schema and sets the DB default search_path. No-op for 'public'; does not re-run
-      # on an already-initialized volume (see the note in scripts/postgres-init-schema.sh).
-      - ./scripts/postgres-init-schema.sh:/docker-entrypoint-initdb.d/01-create-schema.sh:ro
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USERNAME:-}']
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    labels:
-      - 'com.openwa.service=database'
-      - 'com.openwa.builtin=true'
-
-  # ===== OPTIONAL: Built-in Redis =====
-  redis:
-    image: redis:7-alpine
-    container_name: openwa-redis
-    profiles: ['redis', 'full']
-    restart: unless-stopped
-    networks:
-      - openwa-network
-    security_opt:
-      - 'no-new-privileges:true'
-    command: redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    labels:
-      - 'com.openwa.service=cache'
-      - 'com.openwa.builtin=true'
-
 volumes:
   # Pin explicit volume names so the compose path and the Docker-API orchestration path (which uses
   # the literal `openwa_<svc>-data` names in docker.service.ts) bind the SAME volume regardless of the
   # compose project name — otherwise re-enabling a built-in service could mount a fresh empty volume.
   openwa-data:
     name: openwa_openwa-data
-    driver: local
-  postgres-data:
-    name: openwa_postgres-data
-    driver: local
-  redis-data:
-    name: openwa_redis-data
-    driver: local
-  minio-data:
-    name: openwa_minio-data
     driver: local
 
 networks:
