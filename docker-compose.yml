@@ -199,7 +199,7 @@ services:
     security_opt:
       - 'no-new-privileges:true'
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME:-openwa}
+      POSTGRES_USER: ${DATABASE_USERNAME:-}
       # M16: no committed default secret. Empty unless the operator sets it; the postgres
       # image refuses to initialize with an empty password (clear fail-fast), and the app's
       # production boot guard rejects empty/placeholder secrets before startup.
@@ -208,7 +208,7 @@ services:
       # PostgreSQL schema for OpenWA's tables + migration ledger. Default 'public'. The init
       # script below creates the schema (if non-public) and sets the database default search_path,
       # so the built-in container works zero-config with a custom schema. Ignored when 'public'.
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       # Runs only on first init (postgres image docker-entrypoint-initdb.d semantics): creates the
@@ -216,7 +216,7 @@ services:
       # on an already-initialized volume (see the note in scripts/postgres-init-schema.sh).
       - ./scripts/postgres-init-schema.sh:/docker-entrypoint-initdb.d/01-create-schema.sh:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USERNAME:-openwa}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USERNAME:-}']
       interval: 5s
       timeout: 3s
       retries: 5
